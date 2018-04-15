@@ -16,11 +16,23 @@ app.use(logger);
 // and replaces the get/sendFile above
 app.use(express.static('public'));
 
+var cities = ['Caspiana', 'Indigo', 'Paradise'];
+
 // put our /cities endpoint back in to show 
 // dynamic updates using jquery
 app.get('/cities', function (request, response) {
-  var cities = ['Caspiana', 'Indigo', 'Paradise'];
-  response.send(cities);
+  if (request.query.search) {
+    return response.json(citySearch(request.query.search));
+  }
 });
+
+function citySearch(keyword) {
+  var regexp = RegExp(keyword, 'i');
+  var result = cities.filter(function (city) {
+    return city.match(regexp);
+  });
+
+  return result;
+}
 
 app.listen(3000);
