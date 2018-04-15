@@ -16,6 +16,21 @@ app.use(logger);
 // and replaces the get/sendFile above
 app.use(express.static('public'));
 
+app.param('year', function (request, response, next) {
+  if (isYearFormat(request.params.year)) {
+    next();
+  } else {
+    response.status(400).json('Invalid Format for Year');
+  }
+});
+
+// handle all 'name' parameters the same way
+app.param('name', function (request, response, next) {
+  var parsedName = parseCityName(request.params.name);
+  request.cityName = parsedName;
+  next();
+});
+
 var cities = {
   'Lotopia': 'Rough and mountainous',
   'Caspiana': 'Sky-top island',
@@ -23,6 +38,30 @@ var cities = {
   'Paradise': 'Lush, green plantation',
   'Flotilla': 'Bustling urban oasis'
 };
+
+var citiesYear = {
+  5000: 'Lotopia',
+  5100: 'Caspiana',
+  5105: 'Indigo',
+  6000: 'Paradise',
+  7000: 'Flotilla'
+};
+
+function isYearFormat(value) {
+  var regexp = RegExp(/^d{4}$/);
+  return regexp.test(value);
+}
+
+app.get('/cities/year/:year', function (request, response) {
+  var year = request.params.year;
+  var city = citiesYear[year];
+
+  if (!city) {
+    response.status(404).json("No City found for given year");
+  } else {
+    response.json("In " + year + ", " + city + " is created.");
+  }
+});
 
 // new dynamic route to return the city information for the city requested
 app.get('/cities/:name', function (request, response) {
