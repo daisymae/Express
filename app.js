@@ -28,7 +28,8 @@ var cities = {
 app.get('/cities/:name', function (request, response) {
   var cityInfo;
   // retrieve the name parameter from the request
-  cityInfo = cities[request.params.name];
+  var cityName = parseCityName(request.params.name);
+  cityInfo = cities[cityName];
   if (cityInfo) {
     response.json(cityInfo);
   } else {
@@ -41,8 +42,17 @@ app.get('/cities/:name', function (request, response) {
 app.get('/cities', function (request, response) {
   if (request.query.search) {
     return response.json(citySearch(request.query.search));
+  } else {
+    return response.json(cities);
   }
 });
+
+
+// handle all cases and modify to match the case needed (upper case first letter)
+function parseCityName(name) {
+  var parsedName = name[0].toUpperCase() + name.slice(1).toLowerCase();
+  return parsedName;
+}
 
 function citySearch(keyword) {
   var regexp = RegExp(keyword, 'i');
