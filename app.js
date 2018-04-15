@@ -16,7 +16,25 @@ app.use(logger);
 // and replaces the get/sendFile above
 app.use(express.static('public'));
 
-var cities = ['Caspiana', 'Indigo', 'Paradise'];
+var cities = {
+  'Lotopia': 'Rough and mountainous',
+  'Caspiana': 'Sky-top island',
+  'Indigo': 'Vibrant and thriving',
+  'Paradise': 'Lush, green plantation',
+  'Flotilla': 'Bustling urban oasis'
+};
+
+// new dynamic route to return the city information for the city requested
+app.get('/cities/:name', function (request, response) {
+  var cityInfo;
+  // retrieve the name parameter from the request
+  cityInfo = cities[request.params.name];
+  if (cityInfo) {
+    response.json(cityInfo);
+  } else {
+    response.status(404).json("City not found");
+  }
+});
 
 // put our /cities endpoint back in to show 
 // dynamic updates using jquery
