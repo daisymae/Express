@@ -1,5 +1,8 @@
 var express = require('express');
 var app = express();
+var bodyParser = require('body-parser');
+// extended: false forces use of native queryString Node library
+var parseUrlencoded = bodyParser.urlencoded({ extended: false });
 
 // new logger middleware
 var logger = require('./logger');
@@ -102,4 +105,18 @@ function citySearch(keyword) {
   return result;
 }
 
+// section 4: POST & DELETE
+app.post('/cities', parseUrlencoded, function (request, response) {
+  var newCity = request.body;
+  var city = createCity(newCity.name, newCity.description);
+  // alternative to the 2-line approach above:
+  // var city = createCity(request.body.name, request.body.description);
+
+  response.status(201).json(city);
+});
+
+var createCity = function(name, description){
+  cities[name] = description;
+  return name; 
+};
 app.listen(3000);
