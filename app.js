@@ -108,15 +108,24 @@ function citySearch(keyword) {
 // section 4: POST & DELETE
 app.post('/cities', parseUrlencoded, function (request, response) {
   var newCity = request.body;
-  var city = createCity(newCity.name, newCity.description);
-  // alternative to the 2-line approach above:
-  // var city = createCity(request.body.name, request.body.description);
+  if (newCity.description.length > 4) {
+    var city = createCity(newCity.name, newCity.description);
+    // alternative to the 2-line approach above:
+    // var city = createCity(request.body.name, request.body.description);
 
-  response.status(201).json(city);
+    response.status(201).json(city);
+  } else {
+    resposne.status(400).json("Invalid City");
+  }
 });
 
-var createCity = function(name, description){
+app.delete('/cities/:name', function (request, response) {
+  delete cities[request.cityName];
+  response.sendStatus(200);
+});
+
+var createCity = function (name, description) {
   cities[name] = description;
-  return name; 
+  return name;
 };
 app.listen(3000);
