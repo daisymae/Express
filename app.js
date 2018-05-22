@@ -115,13 +115,17 @@ app.post('/cities', parseUrlencoded, function (request, response) {
 
     response.status(201).json(city);
   } else {
-    resposne.status(400).json("Invalid City");
+    response.status(400).json("Invalid City");
   }
 });
 
 app.delete('/cities/:name', function (request, response) {
-  delete cities[request.cityName];
-  response.sendStatus(200);
+  if (cities[request.cityName]) {
+    delete cities[request.cityName];
+    response.sendStatus(200);
+  } else {
+    response.sendStatus(404);
+  }
 });
 
 var createCity = function (name, description) {
