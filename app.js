@@ -28,11 +28,12 @@ app.param('year', function (request, response, next) {
 });
 
 // handle all 'name' parameters the same way
-app.param('name', function (request, response, next) {
-  var parsedName = parseCityName(request.params.name);
-  request.cityName = parsedName;
-  next();
-});
+// update: handled in router.route.all now
+// app.param('name', function (request, response, next) {
+//   var parsedName = parseCityName(request.params.name);
+//   request.cityName = parsedName;
+//   next();
+// });
 
 var cities = {
   'Lotopia': 'Rough and mountainous',
@@ -67,27 +68,27 @@ app.get('/cities/year/:year', function (request, response) {
 });
 
 // new dynamic route to return the city information for the city requested
-app.get('/cities/:name', function (request, response) {
-  var cityInfo;
-  // retrieve the name parameter from the request
-  var cityName = parseCityName(request.params.name);
-  cityInfo = cities[cityName];
-  if (cityInfo) {
-    response.json(cityInfo);
-  } else {
-    response.status(404).json("City not found");
-  }
-});
+// app.get('/cities/:name', function (request, response) {
+//   var cityInfo;
+//   // retrieve the name parameter from the request
+//   var cityName = parseCityName(request.params.name);
+//   cityInfo = cities[cityName];
+//   if (cityInfo) {
+//     response.json(cityInfo);
+//   } else {
+//     response.status(404).json("City not found");
+//   }
+// });
 
 // put our /cities endpoint back in to show 
 // dynamic updates using jquery
-app.get('/cities', function (request, response) {
-  if (request.query.search) {
-    return response.json(citySearch(request.query.search));
-  } else {
-    return response.json(cities);
-  }
-});
+// app.get('/cities', function (request, response) {
+//   if (request.query.search) {
+//     return response.json(citySearch(request.query.search));
+//   } else {
+//     return response.json(cities);
+//   }
+// });
 
 
 // handle all cases and modify to match the case needed (upper case first letter)
@@ -106,21 +107,71 @@ function citySearch(keyword) {
 }
 
 // section 4: POST & DELETE
-app.post('/cities', parseUrlencoded, function (request, response) {
-  var newCity = request.body;
-  if (newCity.description.length > 4) {
-    var city = createCity(newCity.name, newCity.description);
-    // alternative to the 2-line approach above:
-    // var city = createCity(request.body.name, request.body.description);
+// app.post('/cities', parseUrlencoded, function (request, response) {
+//   var newCity = request.body;
+//   if (newCity.description.length > 4) {
+//     var city = createCity(newCity.name, newCity.description);
+//     // alternative to the 2-line approach above:
+//     // var city = createCity(request.body.name, request.body.description);
 
+//     response.status(201).json(city);
+//   } else {
+//     response.status(400).json("Invalid City");
+//   }
+// });
+
+// now use Router instance
+var router = express.Router();
+
+// combine common endpoints into appRoute
+// this is doing it by chaining the functions
+// but could have assigned to a var and used
+// appRoute.get(...); and appRoute.post(...);
+router.route('/')
+.get(function (request, response) {
+  if(request.query.search) {
+    response.json(citySearch(request.query.search));
+  } else {
+    response.json(cities);
+  }
+})
+.post(parseUrlencoded, function (request, response) {
+  if(request.body.description.length > 4) {
+    var city = createCity(request.body.name, request.body.description);
     response.status(201).json(city);
   } else {
-    response.status(400).json("Invalid City");
+    response.status(400).json('Invalid City');
   }
 });
 
-app.delete('/cities/:name', function (request, response) {
-  if (cities[request.cityName]) {
+// app.delete('/cities/:name', function (request, response) {
+//   if (cities[request.cityName]) {
+//     delete cities[request.cityName];
+//     response.sendStatus(200);
+//   } else {
+//     response.sendStatus(404);
+//   }
+// });
+
+
+// combine like endpoints into one appRoute:
+// handle the param processing here
+router.route('/:name')
+  .all(function (request, response, next) {
+    var parsedName = parseCityName(request.params.name);
+    request.cityName = parsedName;
+    next();
+  })
+  .get(function (request, response) {
+  var cityInfo = cities[request.cityName];
+  if(cityInfo) {
+    response.json(cityInfo);
+  } else {
+    response.status(404).json('City not found');
+  }
+})
+  .delete(function (request, response) {
+  if(cities[request.cityName]) {
     delete cities[request.cityName];
     response.sendStatus(200);
   } else {
@@ -132,4 +183,7 @@ var createCity = function (name, description) {
   cities[name] = description;
   return name;
 };
+
+// ideally want router in it's own file to de-clutter app.js.
+app.use('/cities', router);
 app.listen(3000);
